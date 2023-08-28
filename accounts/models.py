@@ -31,8 +31,7 @@ class CustomUserManager(BaseUserManager):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
-        extra_fields.setdefault('is_verified', True)
-
+        extra_fields.setdefault("is_verified", True)
 
         if extra_fields.get("is_staff") is not True:
             raise ValueError("Superuser must have is_staff=True.")
@@ -43,34 +42,19 @@ class CustomUserManager(BaseUserManager):
         if extra_fields.get("is_verified") is not True:
             raise ValueError("Superuser must have is_verified=True.")
 
-
         return self.create_user(phone_number, password, **extra_fields)
 
 
 class CustomUser(AbstractBaseUser, PermissionsMixin):
-    phone_number = models.CharField(
-        max_length=14,
-        unique=True,
-        null=False,
-        blank=False,
-        error_messages={
-            "null": "Phone number cannot be null.",
-            "blank": "Phone number cannot be blank.",
-            "max_length": "Phone number must be at most %(max_length)d characters.",
-        },
-    
-    )
+    phone_number = models.CharField(max_length=14, unique=True)
+    email_address = models.EmailField(max_length=254, blank=True, null=True)
     first_name = models.CharField(max_length=255)
     last_name = models.CharField(max_length=255)
-    email_address = models.EmailField(max_length=254, null=True, blank=True)
     address = models.CharField(max_length=255, blank=True, null=True)
-    
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
     is_admin = models.BooleanField(default=False)
     is_verified = models.BooleanField(default=False)
-    is_staff = models.BooleanField(default=False)
-    
     created_at = models.DateTimeField(auto_now_add=True)
 
     USERNAME_FIELD = "phone_number"
@@ -85,25 +69,13 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "users"
 
 
-    def save(self, *args, **kwargs):
-        """
-        Hashes the transaction pin if it is not already hashed and saves the updated model instance.
-        """
-        if self.transaction_pin and not self.transaction_pin.startswith("pbkdf2_sha256"):
-            self.transaction_pin = make_password(str(self.transaction_pin))
-        super().save(*args, **kwargs)
+# class UserProfile(models.Model):
+#     user = models.OneToOneField(
+#         CustomUser, on_delete=models.CASCADE, related_name="profile"
+#     )
+#     profile_picture = models.ImageField(
+#         upload_to="profile_images/", default="avatar.png"
+#     )
 
-
-class UserProfile(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name="profile")
-    profile_picture = models.ImageField(
-        upload_to="profile_images/", default='avatar.png'
-    )
-
-    def __str__(self):
-        return self.user.first_name + ' ' + f"profile"
-    
-
-
-
-
+#     def __str__(self):
+#         return self.user.first_name + " " + f"profile"
